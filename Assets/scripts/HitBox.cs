@@ -8,12 +8,14 @@ public class HitBox : MonoBehaviour
 
     private Collider hitCollider;
     private Renderer hitRenderer;
+    private AudioSource ownerAudioSource;
     private HashSet<FighterStats> hitTargets = new HashSet<FighterStats>();
 
     void Awake()
     {
         hitCollider = GetComponent<Collider>();
         hitRenderer = GetComponent<Renderer>();
+        ownerAudioSource = GetComponentInParent<AudioSource>();
 
         if (hitCollider != null)
             hitCollider.enabled = false;
@@ -63,6 +65,11 @@ public class HitBox : MonoBehaviour
 
         if (hitTargets.Contains(target))
             return;
+
+        if (ownerAudioSource != null)
+        {
+            ownerAudioSource.Play();
+        }
 
         target.TakeDamage(damage, transform.position);
         hitTargets.Add(target);

@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class FighterController : MonoBehaviour
@@ -9,15 +10,24 @@ public class FighterController : MonoBehaviour
 
     private float lastAttackTime = -999f;
     private FighterStats stats;
+    private AudioSource audioSource;
+
+    private Vector3 originalScale;
+    private bool isAttacking = false;
 
     void Start()
     {
         stats = GetComponent<FighterStats>();
+        audioSource = GetComponent<AudioSource>();
+        originalScale = transform.localScale;
     }
 
     void Update()
     {
         if (stats != null && stats.IsDead)
+            return;
+
+        if (!GameManager.CanControl)
             return;
 
         Move();
@@ -66,6 +76,34 @@ public class FighterController : MonoBehaviour
         {
             hitBox.ActivateHitBox(0.2f);
         }
+
+        if (!isAttacking)
+        {
+            StartCoroutine(AttackAnimation());
+        }
+    }
+
+    IEnumerator AttackAnimation()
+    {
+        isAttacking = true;
+
+        float signX = Mathf.Sign(transform.localScale.x);
+
+        transform.localScale = new Vector3(
+            1.2f * signX,
+            originalScale.y * 0.9f,
+            originalScale.z
+        );
+
+        yield return new WaitForSeconds(0.1f);
+
+        transform.localScale = new Vector3(
+            originalScale.x,
+            originalScale.y,
+            originalScale.z
+        );
+
+        isAttacking = false;
     }
 
     void FaceOpponent()
@@ -74,10 +112,22 @@ public class FighterController : MonoBehaviour
 
         Vector3 scale = transform.localScale;
 
+        float absOriginalX = Mathf.Abs(originalScale.x);
+
         if (opponent.position.x > transform.position.x)
-            scale.x = Mathf.Abs(scale.x);
+            scale.x = absOriginalX;
         else
-            scale.x = -Mathf.Abs(scale.x);
+            scale.x = -absOriginalX;
+
+        if (isAttacking)
+        {
+            scale.x *= 1.3f;
+            scale.y = originalScale.y * 0.8f;
+        }
+        else
+        {
+            scale.y = originalScale.y;
+        }
 
         transform.localScale = scale;
     }

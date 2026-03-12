@@ -1,8 +1,12 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class GameManager : MonoBehaviour
 {
+    public static bool CanControl = false;
+
     public FighterStats playerStats;
     public FighterStats enemyStats;
 
@@ -14,8 +18,26 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        CanControl = false;
+        StartCoroutine(StartFightSequence());
+    }
+
+    IEnumerator StartFightSequence()
+    {
+        if (resultText != null)
+            resultText.text = "Ready";
+
+        yield return new WaitForSeconds(1.0f);
+
+        if (resultText != null)
+            resultText.text = "Fight!";
+
+        yield return new WaitForSeconds(1.0f);
+
         if (resultText != null)
             resultText.text = "";
+
+        CanControl = true;
     }
 
     void Update()
@@ -30,25 +52,33 @@ public class GameManager : MonoBehaviour
             enemyHPText.text = "Enemy HP: " + enemyStats.currentHP;
         }
 
-        if (isGameOver) return;
-
-        if (playerStats != null && playerStats.IsDead)
+        if (!isGameOver)
         {
-            isGameOver = true;
+            if (playerStats != null && playerStats.IsDead)
+            {
+                isGameOver = true;
+                CanControl = false;
 
-            if (resultText != null)
-                resultText.text = "Enemy Wins!";
+                if (resultText != null)
+                    resultText.text = "Enemy Wins!\nPress R to Restart";
 
-            Debug.Log("Enemy Wins!");
+                Debug.Log("Enemy Wins!");
+            }
+            else if (enemyStats != null && enemyStats.IsDead)
+            {
+                isGameOver = true;
+                CanControl = false;
+
+                if (resultText != null)
+                    resultText.text = "Player Wins!\nPress R to Restart";
+
+                Debug.Log("Player Wins!");
+            }
         }
-        else if (enemyStats != null && enemyStats.IsDead)
+
+        if (isGameOver && Input.GetKeyDown(KeyCode.R))
         {
-            isGameOver = true;
-
-            if (resultText != null)
-                resultText.text = "Player Wins!";
-
-            Debug.Log("Player Wins!");
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
     }
 }
