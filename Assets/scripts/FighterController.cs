@@ -5,8 +5,13 @@ public class FighterController : MonoBehaviour
 {
     public float moveSpeed = 5f;
     public float attackCooldown = 0.5f;
+    public float jumpForce = 7f;
     public HitBox hitBox;
     public Transform opponent;
+    public Rigidbody rb;
+
+    public bool isCPU = false;
+    public float attackRange = 1.5f;
 
     private float lastAttackTime = -999f;
     private FighterStats stats;
@@ -14,12 +19,18 @@ public class FighterController : MonoBehaviour
 
     private Vector3 originalScale;
     private bool isAttacking = false;
+    private bool isGrounded = true;
 
     void Start()
     {
         stats = GetComponent<FighterStats>();
         audioSource = GetComponent<AudioSource>();
         originalScale = transform.localScale;
+
+        if (rb == null)
+        {
+            rb = GetComponent<Rigidbody>();
+        }
     }
 
     void Update()
@@ -30,8 +41,17 @@ public class FighterController : MonoBehaviour
         if (!GameManager.CanControl)
             return;
 
-        Move();
-        Attack();
+        if (isCPU)
+        {
+            CPUControl();
+        }
+        else
+        {
+            Move();
+            Jump();
+            Attack();
+        }
+
         FaceOpponent();
     }
 
@@ -44,13 +64,21 @@ public class FighterController : MonoBehaviour
             if (Input.GetKey(KeyCode.A)) move = -1f;
             if (Input.GetKey(KeyCode.D)) move = 1f;
         }
-        else if (CompareTag("Enemy"))
-        {
-            if (Input.GetKey(KeyCode.LeftArrow)) move = -1f;
-            if (Input.GetKey(KeyCode.RightArrow)) move = 1f;
-        }
 
         transform.Translate(Vector3.right * move * moveSpeed * Time.deltaTime, Space.World);
+    }
+
+    void Jump()
+    {
+        if (!CompareTag("Player")) return;
+        if (!isGrounded) return;
+        if (rb == null) return;
+
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
+            isGrounded = false;
+        }
     }
 
     void Attack()
@@ -61,13 +89,31 @@ public class FighterController : MonoBehaviour
         {
             attackKey = Input.GetKeyDown(KeyCode.Space);
         }
-        else if (CompareTag("Enemy"))
-        {
-            attackKey = Input.GetKeyDown(KeyCode.Return);
-        }
 
         if (!attackKey) return;
 
+        TryAttack();
+    }
+
+    void CPUControl()
+    {
+        if (opponent == null) return;
+
+        float distance = Mathf.Abs(opponent.position.x - transform.position.x);
+
+        if (distance > attackRange)
+        {
+            float dir = opponent.position.x > transform.position.x ? 1f : -1f;
+            transform.Translate(Vector3.right * dir * moveSpeed * Time.deltaTime, Space.World);
+        }
+        else
+        {
+            TryAttack();
+        }
+    }
+
+    void TryAttack()
+    {
         if (Time.time < lastAttackTime + attackCooldown) return;
 
         lastAttackTime = Time.time;
@@ -121,8 +167,8 @@ public class FighterController : MonoBehaviour
 
         if (isAttacking)
         {
-            scale.x *= 1.3f;
-            scale.y = originalScale.y * 0.8f;
+            scale.x *= 1.2f;
+            scale.y = originalScale.y * 0.9f;
         }
         else
         {
@@ -130,5 +176,13 @@ public class FighterController : MonoBehaviour
         }
 
         transform.localScale = scale;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = true;
+        }
     }
 }
