@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Kakutou_6000311f1.slnx"
+    "dotnet.defaultSolution": "Kakutou.slnx"
 }
