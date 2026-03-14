@@ -10,37 +10,56 @@ public class GameManager : MonoBehaviour
     public FighterStats playerStats;
     public FighterStats enemyStats;
 
+    public FighterController enemyController;
+
     public TextMeshProUGUI playerHPText;
     public TextMeshProUGUI enemyHPText;
     public TextMeshProUGUI resultText;
+    public TextMeshProUGUI titleText;
 
     private bool isGameOver = false;
+    private bool isModeSelected = false;
 
     void Start()
     {
         CanControl = false;
-        StartCoroutine(StartFightSequence());
-    }
-
-    IEnumerator StartFightSequence()
-    {
-        if (resultText != null)
-            resultText.text = "Ready";
-
-        yield return new WaitForSeconds(1.0f);
-
-        if (resultText != null)
-            resultText.text = "Fight!";
-
-        yield return new WaitForSeconds(1.0f);
+        isGameOver = false;
+        isModeSelected = false;
 
         if (resultText != null)
             resultText.text = "";
 
-        CanControl = true;
+        if (titleText != null)
+        {
+            titleText.gameObject.SetActive(true);
+            titleText.text = "Mini Fighting Game\nPress 1 : 1P vs CPU\nPress 2 : 1P vs 2P";
+        }
     }
 
     void Update()
+    {
+        UpdateHPUI();
+
+        if (!isModeSelected)
+        {
+            SelectMode();
+            return;
+        }
+
+        if (!isGameOver)
+        {
+            CheckGameOver();
+        }
+        else
+        {
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            }
+        }
+    }
+
+    void UpdateHPUI()
     {
         if (playerStats != null && playerHPText != null)
         {
@@ -51,34 +70,83 @@ public class GameManager : MonoBehaviour
         {
             enemyHPText.text = "Enemy HP: " + enemyStats.currentHP;
         }
+    }
 
-        if (!isGameOver)
+    void SelectMode()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            if (playerStats != null && playerStats.IsDead)
-            {
-                isGameOver = true;
-                CanControl = false;
+            isModeSelected = true;
 
-                if (resultText != null)
-                    resultText.text = "Enemy Wins!\nPress R to Restart";
+            if (enemyController != null)
+                enemyController.isCPU = true;
 
-                Debug.Log("Enemy Wins!");
-            }
-            else if (enemyStats != null && enemyStats.IsDead)
-            {
-                isGameOver = true;
-                CanControl = false;
+            StartCoroutine(StartFightSequence("1P vs CPU"));
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            isModeSelected = true;
 
-                if (resultText != null)
-                    resultText.text = "Player Wins!\nPress R to Restart";
+            if (enemyController != null)
+                enemyController.isCPU = false;
 
-                Debug.Log("Player Wins!");
-            }
+            StartCoroutine(StartFightSequence("1P vs 2P"));
+        }
+    }
+
+    IEnumerator StartFightSequence(string modeName)
+    {
+        if (titleText != null)
+        {
+            titleText.text = modeName;
         }
 
-        if (isGameOver && Input.GetKeyDown(KeyCode.R))
+        yield return new WaitForSeconds(0.8f);
+
+        if (titleText != null)
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            titleText.text = "Ready";
+        }
+
+        yield return new WaitForSeconds(1.0f);
+
+        if (titleText != null)
+        {
+            titleText.text = "Fight!";
+        }
+
+        yield return new WaitForSeconds(1.0f);
+
+        if (titleText != null)
+        {
+            titleText.text = "";
+            titleText.gameObject.SetActive(false);
+        }
+
+        CanControl = true;
+    }
+
+    void CheckGameOver()
+    {
+        if (playerStats != null && playerStats.IsDead)
+        {
+            isGameOver = true;
+            CanControl = false;
+
+            if (resultText != null)
+                resultText.text = "Enemy Wins!\nPress R to Restart";
+
+            Debug.Log("Enemy Wins!");
+        }
+        else if (enemyStats != null && enemyStats.IsDead)
+        {
+            isGameOver = true;
+            CanControl = false;
+
+            if (resultText != null)
+                resultText.text = "Player Wins!\nPress R to Restart";
+
+            Debug.Log("Player Wins!");
         }
     }
 }

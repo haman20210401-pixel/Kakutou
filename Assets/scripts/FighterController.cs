@@ -64,17 +64,32 @@ public class FighterController : MonoBehaviour
             if (Input.GetKey(KeyCode.A)) move = -1f;
             if (Input.GetKey(KeyCode.D)) move = 1f;
         }
+        else if (CompareTag("Enemy"))
+        {
+            if (Input.GetKey(KeyCode.LeftArrow)) move = -1f;
+            if (Input.GetKey(KeyCode.RightArrow)) move = 1f;
+        }
 
         transform.Translate(Vector3.right * move * moveSpeed * Time.deltaTime, Space.World);
     }
 
     void Jump()
     {
-        if (!CompareTag("Player")) return;
         if (!isGrounded) return;
         if (rb == null) return;
 
-        if (Input.GetKeyDown(KeyCode.W))
+        bool jumpKey = false;
+
+        if (CompareTag("Player"))
+        {
+            jumpKey = Input.GetKeyDown(KeyCode.W);
+        }
+        else if (CompareTag("Enemy"))
+        {
+            jumpKey = Input.GetKeyDown(KeyCode.UpArrow);
+        }
+
+        if (jumpKey)
         {
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
             isGrounded = false;
@@ -88,6 +103,10 @@ public class FighterController : MonoBehaviour
         if (CompareTag("Player"))
         {
             attackKey = Input.GetKeyDown(KeyCode.Space);
+        }
+        else if (CompareTag("Enemy"))
+        {
+            attackKey = Input.GetKeyDown(KeyCode.Return);
         }
 
         if (!attackKey) return;
@@ -144,7 +163,7 @@ public class FighterController : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
 
         transform.localScale = new Vector3(
-            originalScale.x,
+            Mathf.Sign(transform.localScale.x) * Mathf.Abs(originalScale.x),
             originalScale.y,
             originalScale.z
         );
@@ -157,7 +176,6 @@ public class FighterController : MonoBehaviour
         if (opponent == null) return;
 
         Vector3 scale = transform.localScale;
-
         float absOriginalX = Mathf.Abs(originalScale.x);
 
         if (opponent.position.x > transform.position.x)
@@ -179,10 +197,10 @@ public class FighterController : MonoBehaviour
     }
 
     private void OnCollisionEnter(Collision collision)
+{
+    if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
     {
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            isGrounded = true;
-        }
+        isGrounded = true;
     }
+}
 }
