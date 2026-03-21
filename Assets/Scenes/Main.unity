@@ -167,6 +167,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitBox
   damage: 10
+  isUnblockable: 0
 --- !u!65 &304929537
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -834,6 +835,11 @@ MonoBehaviour:
   maxHP: 100
   currentHP: 0
   knockbackPower: 0.5
+  maxGuardGauge: 40
+  currentGuardGauge: 0
+  hitSound: {fileID: 0}
+  guardSound: {fileID: 0}
+  hitParticle: {fileID: 0}
 --- !u!114 &660642606
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -854,6 +860,8 @@ MonoBehaviour:
   rb: {fileID: 0}
   isCPU: 1
   attackRange: 1.5
+  dashSpeed: 15
+  dashDuration: 0.15
   minBoundaryX: -9
   maxBoundaryX: 9
 --- !u!82 &660642607
@@ -1440,6 +1448,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitBox
   damage: 10
+  isUnblockable: 0
 --- !u!65 &1028089140
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1882,6 +1891,11 @@ MonoBehaviour:
   maxHP: 100
   currentHP: 0
   knockbackPower: 0.5
+  maxGuardGauge: 40
+  currentGuardGauge: 0
+  hitSound: {fileID: 8300000, guid: 4da36a527e5b2304daa3fa794bea2122, type: 3}
+  guardSound: {fileID: 8300000, guid: d0c59320747075e4bb1e27dfdcca9093, type: 3}
+  hitParticle: {fileID: 0}
 --- !u!114 &1410677711
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1902,6 +1916,8 @@ MonoBehaviour:
   rb: {fileID: 1410677705}
   isCPU: 0
   attackRange: 1.5
+  dashSpeed: 15
+  dashDuration: 0.15
   minBoundaryX: -9
   maxBoundaryX: 9
 --- !u!82 &1410677712

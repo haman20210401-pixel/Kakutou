@@ -67,6 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-
     "dotnet.defaultSolution": "KakutouAI.slnx"
-
+}
