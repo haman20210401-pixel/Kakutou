@@ -261,9 +261,9 @@ public class FighterController : MonoBehaviour
         {
             if (hasCommand)
             {
-                // コマンド必殺技（強化版）
-                Debug.Log(gameObject.name + " COMMAND SPECIAL!");
-                TryAttack(40, 1.5f, 0.5f, 2.5f, 1.5f);
+                // はどうけんコマンド成立時の処理：従来の近距離攻撃から飛び道具へ変更する
+                // Debug.Log(gameObject.name + " COMMAND SPECIAL!");
+                TryProjectileAttack(40, 1.5f); // 飛び道具を生成する処理を呼び出す
                 inputBuffer.Clear(); // 技が出たらバッファクリア
             }
             else
@@ -431,6 +431,84 @@ public class FighterController : MonoBehaviour
         }
 
         isAttacking = false;
+    }
+    // ------------------------------------------
+
+    // --- 新規追加部分：飛び道具（コマンド必殺技）の処理 ---
+    // 飛び道具のクールダウンおよびタメ動作を開始する
+    void TryProjectileAttack(int damage, float cooldown)
+    {
+        if (Time.time < lastAttackTime + attackCooldown) return;
+        if (isAttacking) return;
+
+        attackCooldown = cooldown;
+        lastAttackTime = Time.time;
+        
+        StartCoroutine(ProjectileSequence(damage));
+    }
+
+    // 飛び道具発射の一連のモーション（タメ～発射）を処理する
+    IEnumerator ProjectileSequence(int damage)
+    {
+        isAttacking = true;
+        
+        // 波動拳のタメ動作（少ししゃがむようなスケールへ変更）
+        currentAttackScaleX = 0.8f;
+        currentAttackScaleY = 1.2f;
+        yield return new WaitForSeconds(0.3f);
+        
+        // 発射動作（前に突き出すようなスケールへ変更）
+        currentAttackScaleX = 2.0f;
+        currentAttackScaleY = 0.9f;
+
+        // 実際に飛び道具のオブジェクトを生成・発射する
+        ShootProjectile(damage);
+
+        yield return new WaitForSeconds(0.4f);
+        
+        // 元の姿勢に戻す
+        currentAttackScaleX = 1.0f;
+        currentAttackScaleY = 1.0f;
+        isAttacking = false;
+    }
+
+    // 飛び道具を動的に生成し、色を変更して前方に打ち出す処理
+    void ShootProjectile(int damage)
+    {
+        // プリミティブな球体を飛び道具として生成する
+        GameObject projObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        
+        // 現在のキャラクターが向いている方向を発射方向とする
+        float dir = transform.localScale.x > 0 ? 1f : -1f;
+        
+        // プレイヤーの少し前方に生成位置を調整する
+        Vector3 spawnPos = transform.position + new Vector3(dir * 1.5f, 1f, 0f);
+        projObj.transform.position = spawnPos;
+        projObj.transform.localScale = new Vector3(0.6f, 0.6f, 0.6f);
+
+        // 飛び道具の色を赤からシアン（水色）に変更し、発光効果(Emission)を追加する
+        Renderer rend = projObj.GetComponent<Renderer>();
+        if (rend != null)
+        {
+            rend.material.color = Color.cyan;
+            rend.material.EnableKeyword("_EMISSION");
+            rend.material.SetColor("_EmissionColor", Color.cyan * 2.0f);
+        }
+
+        // コライダーをトリガーとして設定し、接触時に物理的な反発が起きないようにする
+        Collider coll = projObj.GetComponent<Collider>();
+        if (coll != null) coll.isTrigger = true;
+        
+        // 物理挙動が適切に行われるようRigidbodyを追加し、重力を無効にする
+        Rigidbody projRb = projObj.AddComponent<Rigidbody>();
+        projRb.useGravity = false;
+        projRb.isKinematic = true;
+
+        // Projectileコンポーネントを追加して、速度やダメージなどのパラメータを設定する
+        Projectile proj = projObj.AddComponent<Projectile>();
+        proj.damage = damage;
+        proj.speed = 15f;
+        proj.Initialize(stats, dir);
     }
     // ------------------------------------------
 
