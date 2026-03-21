@@ -5,6 +5,10 @@ using UnityEngine;
 public class HitBox : MonoBehaviour
 {
     public int damage = 10;
+    
+    // --- 新規追加部分：ガード不能攻撃かどうかのフラグ ---
+    public bool isUnblockable = false;
+    // ----------------------------------------------
 
     private Collider hitCollider;
     private Renderer hitRenderer;
@@ -24,10 +28,14 @@ public class HitBox : MonoBehaviour
             hitRenderer.enabled = false;
     }
 
-    public void ActivateHitBox(float duration)
+    // --- 新規修正部分：ガード不能フラグを追加 ---
+    public void ActivateHitBox(float duration, int newDamage = 10, bool unblockable = false)
     {
+        this.damage = newDamage;
+        this.isUnblockable = unblockable;
         StartCoroutine(HitRoutine(duration));
     }
+    // ----------------------------------------------
 
     IEnumerator HitRoutine(float duration)
     {
@@ -71,7 +79,8 @@ public class HitBox : MonoBehaviour
             ownerAudioSource.Play();
         }
 
-        target.TakeDamage(damage, transform.position);
+        // --- 修正部分：ガード不能フラグを渡す ---
+        target.TakeDamage(damage, transform.position, isUnblockable);
         hitTargets.Add(target);
     }
 }
