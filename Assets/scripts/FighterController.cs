@@ -9,6 +9,7 @@ public class FighterController : MonoBehaviour
     public HitBox hitBox;
     public Transform opponent;
     public Rigidbody rb;
+    public Animator animator; // --- 新規追加部分：3DモデルのAnimator ---
 
     public bool isCPU = false;
     public float attackRange = 1.5f;
@@ -69,6 +70,13 @@ public class FighterController : MonoBehaviour
         {
             rb = GetComponent<Rigidbody>();
         }
+
+        // --- 新規追加部分：Animatorの自動取得 ---
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+        // ------------------------------------
     }
 
     void Update()
@@ -164,6 +172,10 @@ public class FighterController : MonoBehaviour
         }
 
         transform.Translate(Vector3.right * move * moveSpeed * Time.deltaTime, Space.World);
+        
+        // --- 新規追加部分：歩きアニメーションの反映 ---
+        if (animator != null) animator.SetFloat("Speed", Mathf.Abs(move));
+        // ----------------------------------------
     }
 
     // --- 新規追加部分：ダッシュ・バックステップのコルーチン処理 ---
@@ -172,6 +184,11 @@ public class FighterController : MonoBehaviour
         if (isAttacking || !isGrounded) yield break;
 
         isDashing = true;
+
+        // --- 新規追加部分：ダッシュ時のアニメーション ---
+        if (animator != null) animator.SetTrigger("Dash");
+        // --------------------------------------------
+
         float startTime = Time.time;
 
         while (Time.time < startTime + dashDuration)
@@ -214,6 +231,10 @@ public class FighterController : MonoBehaviour
         {
             rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
             isGrounded = false;
+
+            // --- 新規追加部分：ジャンプアニメーション ---
+            if (animator != null) animator.SetTrigger("Jump");
+            // ----------------------------------------
         }
     }
 
@@ -376,6 +397,7 @@ public class FighterController : MonoBehaviour
         if (!isGrounded || isAttacking || isDashing || isGuardCrushed) 
         {
             isDefending = false;
+            if (animator != null) animator.SetBool("IsDefending", false); // ガード解除
             return;
         }
 
@@ -387,6 +409,10 @@ public class FighterController : MonoBehaviour
         {
             isDefending = Input.GetKey(KeyCode.DownArrow);
         }
+
+        // --- 新規追加部分：ガードアニメーション ---
+        if (animator != null) animator.SetBool("IsDefending", isDefending);
+        // ------------------------------------
     }
     // ----------------------------
 
@@ -408,6 +434,15 @@ public class FighterController : MonoBehaviour
     IEnumerator AttackSequence(int damage, float duration)
     {
         isAttacking = true;
+
+        // --- 新規追加部分：ダメージ量に応じた攻撃アニメーションの設定 ---
+        if (animator != null)
+        {
+            if (damage <= 10) animator.SetTrigger("Punch");
+            else if (damage <= 20) animator.SetTrigger("Kick");
+            else animator.SetTrigger("Special");
+        }
+        // ----------------------------------------------------
 
         // 必殺技（ダメージ30想定）のときはタメ（予備動作）を入れる
         if (damage >= 30)
@@ -451,6 +486,10 @@ public class FighterController : MonoBehaviour
     IEnumerator ProjectileSequence(int damage)
     {
         isAttacking = true;
+
+        // --- 新規追加部分：波動拳アニメーション ---
+        if (animator != null) animator.SetTrigger("Hadouken");
+        // --------------------------------------
         
         // 波動拳のタメ動作（少ししゃがむようなスケールへ変更）
         currentAttackScaleX = 0.8f;
@@ -578,6 +617,10 @@ public class FighterController : MonoBehaviour
     {
         isAttacking = true;
         
+        // --- 新規追加部分：投げアニメーション ---
+        if (animator != null) animator.SetTrigger("Throw");
+        // ------------------------------------
+
         // 少し前傾姿勢になる（投げの予備動作）
         currentAttackScaleX = 1.1f;
         currentAttackScaleY = 1.2f;
@@ -630,15 +673,20 @@ public class FighterController : MonoBehaviour
         isDashing = false;
         isDefending = false;
 
+        // --- 新規追加部分：ガードクラッシュアニメーション ---
+        if (animator != null) animator.SetTrigger("GuardCrush");
+        // ----------------------------------------------
+
         // 体勢を大きく崩す演出（Z軸に傾ける）
         float originalZ = transform.rotation.eulerAngles.z;
         float dir = opponent != null && opponent.position.x > transform.position.x ? 1f : -1f;
-        transform.rotation = Quaternion.Euler(0, 0, 25f * -dir);
+        
+        if (animator == null) transform.rotation = Quaternion.Euler(0, 0, 25f * -dir);
 
         yield return new WaitForSeconds(duration);
 
         // 元に戻す
-        transform.rotation = Quaternion.Euler(0, 0, originalZ);
+        if (animator == null) transform.rotation = Quaternion.Euler(0, 0, originalZ);
         isGuardCrushed = false;
     }
     // ------------------------------------------

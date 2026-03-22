@@ -111,6 +111,13 @@ public class FighterStats : MonoBehaviour
             // 防御していない or ガード不能攻撃 or ガードクラッシュ中の直撃
             currentHP -= damage;
             Debug.Log(gameObject.name + " HP: " + currentHP + (isUnblockable ? " (Unblockable Hit!)" : ""));
+
+            // --- 新規追加部分：ヒットアニメーションの再生 ---
+            if (controller != null && controller.animator != null)
+            {
+                controller.animator.SetTrigger("Hit"); // 被弾アニメーション
+            }
+            // ----------------------------------------
         }
 
         if (currentHP < 0)

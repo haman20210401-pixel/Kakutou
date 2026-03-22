@@ -8,7 +8,9 @@ public class HitBox : MonoBehaviour
     
     // --- 新規追加部分：ガード不能攻撃かどうかのフラグ ---
     public bool isUnblockable = false;
-    // ----------------------------------------------
+    
+    // --- 新規追加部分：四角い当たり判定（赤い箱）の表示・非表示を切り替えるフラグ ---
+    public bool showVisibleHitBox = false; 
 
     private Collider hitCollider;
     private Renderer hitRenderer;
@@ -24,18 +26,17 @@ public class HitBox : MonoBehaviour
         if (hitCollider != null)
             hitCollider.enabled = false;
 
+        // 初期状態でレンダラー（赤い箱）を見えなくする
         if (hitRenderer != null)
             hitRenderer.enabled = false;
     }
 
-    // --- 新規修正部分：ガード不能フラグを追加 ---
     public void ActivateHitBox(float duration, int newDamage = 10, bool unblockable = false)
     {
         this.damage = newDamage;
         this.isUnblockable = unblockable;
         StartCoroutine(HitRoutine(duration));
     }
-    // ----------------------------------------------
 
     IEnumerator HitRoutine(float duration)
     {
@@ -44,7 +45,8 @@ public class HitBox : MonoBehaviour
         if (hitCollider != null)
             hitCollider.enabled = true;
 
-        if (hitRenderer != null)
+        // フラグがオンの時だけ赤い箱を見せるように変更
+        if (hitRenderer != null && showVisibleHitBox)
             hitRenderer.enabled = true;
 
         yield return new WaitForSeconds(duration);
